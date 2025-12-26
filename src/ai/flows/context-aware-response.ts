@@ -59,12 +59,10 @@ const contextAwareResponsePrompt = ai.definePrompt({
   input: {schema: ContextAwareResponseInputSchema},
   output: {schema: ContextAwareResponseOutputSchema},
   tools: [summarizeChatHistoryTool],
-  system: `You are a helpful AI assistant. Consider the chat history to provide relevant and coherent responses. Use the summarizeChatHistory tool to shorten the chat history if it is too long.`,
-  prompt: `{{#if chatHistory}}The chat history is:
-{{summarizeChatHistoryTool chatHistory=chatHistory length=5}}
-{{/if}}
+  system: `You are a helpful AI assistant. Consider the chat history to provide relevant and coherent responses. Use the summarizeChatHistory tool to shorten the chat history if it is too long. The default length to summarize to is 5 turns.`,
+  prompt: `{{#if chatHistory}}The user has a chat history with you. Use the summarizeChatHistory tool if you need to see it.{{/if}}
 User: {{{message}}}
-AI:`,  
+AI:`,
 });
 
 const contextAwareResponseFlow = ai.defineFlow(
@@ -84,4 +82,3 @@ export async function contextAwareResponse(input: ContextAwareResponseInput): Pr
 }
 
 export type {summarizeChatHistoryTool};
-
