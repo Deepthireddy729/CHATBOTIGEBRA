@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "src/ai/flows/**/*.ts": {
+      "maxDuration": 30
+    }
+  }
+}
