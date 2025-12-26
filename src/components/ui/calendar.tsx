@@ -53,8 +53,18 @@ function Calendar({
         day_hidden: "invisible",
         ...classNames,
       }}
-      IconLeft={(props) => <ChevronLeft className="h-4 w-4" {...props} />}
-      IconRight={(props) => <ChevronRight className="h-4 w-4" {...props} />}
+      components={{
+        Chevron: ({ orientation, ...props }) => {
+          if (orientation === 'left') {
+            return <ChevronLeft className="h-4 w-4" {...props} />;
+          }
+          if (orientation === 'right') {
+            return <ChevronRight className="h-4 w-4" {...props} />;
+          }
+          // For up/down orientations, return a default chevron or handle as needed
+          return <ChevronLeft className="h-4 w-4" {...props} />;
+        },
+      }}
       {...props}
     />
   )
