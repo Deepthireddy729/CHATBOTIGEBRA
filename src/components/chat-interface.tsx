@@ -257,7 +257,7 @@ export function ChatInterface() {
               disabled={isLoading}
               aria-label="Chat input"
             />
-            <Button type="submit" size="icon" disabled={isLoading || (!input && !uploadedFile)} className="h-11 w-11 rounded-full flex-shrink-0" aria-label="Send message">
+            <Button type="submit" size="icon" disabled={isLoading || (!input.trim() && !uploadedFile)} className="h-11 w-11 rounded-full flex-shrink-0" aria-label="Send message">
               {isLoading ? <LoaderCircle className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
             </Button>
           </form>
