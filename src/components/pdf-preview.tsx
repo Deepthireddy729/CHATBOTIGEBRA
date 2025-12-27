@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Maximize2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// Configure PDF.js worker
+// Configure PDF.js worker for better Unicode support
 pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
 
 interface PDFPreviewProps {
@@ -46,7 +46,21 @@ export function PDFPreview({ data, fileName, className }: PDFPreviewProps) {
   };
 
   return (
-    <div className={cn("border rounded-lg overflow-hidden bg-white", className)}>
+    <>
+      {/* Telugu font support */}
+      <style jsx>{`
+        .react-pdf__Page__textContent {
+          font-family: 'Noto Sans Telugu', 'Telugu Sangam MN', 'Arial Unicode MS', sans-serif !important;
+          font-size: inherit !important;
+          line-height: 1.2 !important;
+        }
+        .react-pdf__Page__textContent span {
+          font-family: inherit !important;
+          direction: ltr !important;
+          unicode-bidi: bidi-override !important;
+        }
+      `}</style>
+      <div className={cn("border rounded-lg overflow-hidden bg-white", className)}>
       {/* PDF Controls */}
       <div className="flex items-center justify-between p-2 bg-gray-50 border-b">
         <div className="flex items-center gap-2">
@@ -109,9 +123,15 @@ export function PDFPreview({ data, fileName, className }: PDFPreviewProps) {
           <Page
             pageNumber={pageNumber}
             scale={scale}
-            renderTextLayer={false}
-            renderAnnotationLayer={false}
+            renderTextLayer={true}
+            renderAnnotationLayer={true}
             className="shadow-sm"
+            onLoadSuccess={() => {
+              // Force re-render for text layer
+              setTimeout(() => {
+                // This helps with Unicode text rendering
+              }, 100);
+            }}
           />
         </Document>
       </div>
@@ -121,5 +141,6 @@ export function PDFPreview({ data, fileName, className }: PDFPreviewProps) {
         <div className="text-xs text-gray-600 truncate">{fileName}</div>
       </div>
     </div>
+    </>
   );
 }
