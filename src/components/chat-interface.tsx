@@ -11,6 +11,8 @@ import { cn } from "@/lib/utils";
 import { getAIResponse } from "@/app/actions";
 import { StreamingText } from "./streaming-text";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
+import { extractPDFContent } from "@/lib/pdf-processor";
+import { useToast } from "@/hooks/use-toast";
 
 interface Message {
   role: "user" | "ai";
@@ -42,6 +44,7 @@ export function ChatInterface() {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
 
 
   const scrollToBottom = () => {
@@ -101,8 +104,36 @@ export function ChatInterface() {
     
     setMessages((prev) => [...prev, newUserMessage]);
     setInput("");
-    setUploadedFile(null);
     setIsLoading(true);
+
+    let fileSummary: string | undefined;
+
+    if (uploadedFile) {
+        if (uploadedFile.type === 'application/pdf') {
+            try {
+                toast({ title: "Processing PDF...", description: "Extracting text from your document." });
+                const pdfContent = await extractPDFContent(uploadedFile.data);
+                fileSummary = pdfContent.text;
+                if (!fileSummary) {
+                  fileSummary = `Could not extract text from the PDF: ${uploadedFile.name}. It might be an image-only PDF.`;
+                } else {
+                  fileSummary = `Here is the content of the attached PDF "${uploadedFile.name}":\n\n${fileSummary}`;
+                }
+                toast({ title: "PDF Processing Complete", description: "You can now ask questions about the document." });
+            } catch (error) {
+                console.error("Error processing PDF:", error);
+                toast({
+                    variant: "destructive",
+                    title: "PDF Processing Failed",
+                    description: "Could not process the attached PDF file.",
+                });
+                setIsLoading(false);
+                return;
+            }
+        }
+    }
+
+    setUploadedFile(null);
 
     const historyForAI: { user: string; ai: string }[] = [];
     for (let i = 0; i < oldMessages.length; i++) {
@@ -123,7 +154,8 @@ export function ChatInterface() {
       const response = await getAIResponse({
         message: userInput,
         chatHistory: historyForAI,
-        file: uploadedFile ? { data: uploadedFile.data, name: uploadedFile.name } : undefined,
+        file: uploadedFile && !fileSummary ? { data: uploadedFile.data, name: uploadedFile.name } : undefined,
+        fileSummary,
       });
       setMessages((prev) => [...prev, { role: "ai", content: response.response }]);
     } catch (error) {

@@ -10,7 +10,6 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import {summarizePdf} from './summarize-pdf';
 
 const ContextAwareResponseInputSchema = z.object({
   message: z.string().describe('The user message to respond to.'),
@@ -19,6 +18,7 @@ const ContextAwareResponseInputSchema = z.object({
     data: z.string().describe("A file attached by the user, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."),
     name: z.string().describe('The name of the file.'),
   }).optional().describe('A file attached by the user.'),
+  fileSummary: z.string().optional().describe('A pre-processed summary of the attached file.'),
 });
 export type ContextAwareResponseInput = z.infer<typeof ContextAwareResponseInputSchema>;
 
@@ -32,7 +32,7 @@ const contextAwareResponsePrompt = ai.definePrompt({
   input: {schema: z.object({
     message: ContextAwareResponseInputSchema.shape.message,
     chatHistory: ContextAwareResponseInputSchema.shape.chatHistory,
-    fileSummary: z.string().optional().describe('A summary of the attached file.'),
+    fileSummary: ContextAwareResponseInputSchema.shape.fileSummary,
   })},
   output: {schema: ContextAwareResponseOutputSchema},
   system: `You are a helpful AI assistant. Consider the chat history and any attached files to provide relevant and coherent responses. If a file is attached, analyze its content thoroughly, paying close attention to its original language.`,
@@ -56,21 +56,15 @@ const contextAwareResponseFlow = ai.defineFlow(
     outputSchema: ContextAwareResponseOutputSchema,
   },
   async input => {
-    let fileSummary: string | undefined;
-    if (input.file) {
-      if (input.file.data.startsWith('data:application/pdf')) {
-        fileSummary = await summarizePdf({ pdfDataUri: input.file.data });
-      } else {
-        // For non-PDFs, maybe just use the file name as context for now.
-        // Or in the future, could use a different summarizer.
-        fileSummary = `The user attached a file named ${input.file.name}.`;
-      }
+    let summary = input.fileSummary;
+    if (input.file && !summary) {
+        summary = `The user attached a file named ${input.file.name}.`;
     }
 
     const {output} = await contextAwareResponsePrompt({
       message: input.message,
       chatHistory: input.chatHistory,
-      fileSummary: fileSummary,
+      fileSummary: summary,
     });
     return output!;
   }
