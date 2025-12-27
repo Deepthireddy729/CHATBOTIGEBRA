@@ -10,6 +10,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import {summarizePdf} from './summarize-pdf';
 
 const ContextAwareResponseInputSchema = z.object({
   message: z.string().describe('The user message to respond to.'),
@@ -28,16 +29,20 @@ export type ContextAwareResponseOutput = z.infer<typeof ContextAwareResponseOutp
 
 const contextAwareResponsePrompt = ai.definePrompt({
   name: 'contextAwareResponsePrompt',
-  input: {schema: ContextAwareResponseInputSchema},
+  input: {schema: z.object({
+    message: ContextAwareResponseInputSchema.shape.message,
+    chatHistory: ContextAwareResponseInputSchema.shape.chatHistory,
+    fileSummary: z.string().optional().describe('A summary of the attached file.'),
+  })},
   output: {schema: ContextAwareResponseOutputSchema},
   system: `You are a helpful AI assistant. Consider the chat history and any attached files to provide relevant and coherent responses. If a file is attached, analyze its content thoroughly, paying close attention to its original language.`,
   prompt: `{{#if chatHistory}}
 You have a chat history with the user.
 {{/if}}
 
-{{#if file}}
-The user has attached a file named '{{file.name}}'. Please analyze its content carefully before responding.
-{{media url=file.data}}
+{{#if fileSummary}}
+The user has attached a file, and here is a summary of its content:
+{{{fileSummary}}}
 {{/if}}
 
 User: {{{message}}}
@@ -51,7 +56,22 @@ const contextAwareResponseFlow = ai.defineFlow(
     outputSchema: ContextAwareResponseOutputSchema,
   },
   async input => {
-    const {output} = await contextAwareResponsePrompt(input);
+    let fileSummary: string | undefined;
+    if (input.file) {
+      if (input.file.data.startsWith('data:application/pdf')) {
+        fileSummary = await summarizePdf({ pdfDataUri: input.file.data });
+      } else {
+        // For non-PDFs, maybe just use the file name as context for now.
+        // Or in the future, could use a different summarizer.
+        fileSummary = `The user attached a file named ${input.file.name}.`;
+      }
+    }
+
+    const {output} = await contextAwareResponsePrompt({
+      message: input.message,
+      chatHistory: input.chatHistory,
+      fileSummary: fileSummary,
+    });
     return output!;
   }
 );
