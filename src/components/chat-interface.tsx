@@ -11,8 +11,8 @@ import { cn } from "@/lib/utils";
 import { getAIResponse } from "@/app/actions";
 import { StreamingText } from "./streaming-text";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
-import { extractPDFContent } from "@/lib/pdf-processor";
 import { useToast } from "@/hooks/use-toast";
+import { summarizePdf } from "@/ai/flows/summarize-pdf";
 
 interface Message {
   role: "user" | "ai";
@@ -111,23 +111,19 @@ export function ChatInterface() {
     if (uploadedFile) {
         if (uploadedFile.type === 'application/pdf') {
             try {
-                toast({ title: "Processing PDF...", description: "Extracting text from your document." });
-                const pdfContent = await extractPDFContent(uploadedFile.data);
-                fileSummary = pdfContent.text;
-                if (!fileSummary) {
-                  fileSummary = `Could not extract text from the PDF: ${uploadedFile.name}. It might be an image-only PDF.`;
-                } else {
-                  fileSummary = `Here is the content of the attached PDF "${uploadedFile.name}":\n\n${fileSummary}`;
-                }
+                toast({ title: "Processing PDF...", description: "This may take a moment." });
+                const summary = await summarizePdf({ pdfDataUri: uploadedFile.data });
+                fileSummary = `Here is a summary of the attached PDF "${uploadedFile.name}":\n\n${summary}`;
                 toast({ title: "PDF Processing Complete", description: "You can now ask questions about the document." });
             } catch (error) {
                 console.error("Error processing PDF:", error);
                 toast({
                     variant: "destructive",
                     title: "PDF Processing Failed",
-                    description: "Could not process the attached PDF file.",
+                    description: "Could not process the attached PDF file. It might be corrupted or in an unsupported format.",
                 });
                 setIsLoading(false);
+                setMessages(oldMessages); // Restore previous messages
                 return;
             }
         }

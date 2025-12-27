@@ -20,7 +20,7 @@ const pdfSummaryPrompt = ai.definePrompt({
   name: 'pdfSummaryPrompt',
   input: {schema: SummarizePdfInputSchema},
   output: {format: 'text'},
-  prompt: `Summarize the following document. Extract the key topics, arguments, and conclusions. The summary should be concise and easy to understand.
+  prompt: `Analyze the following document and provide a concise summary. Your summary should extract the key topics, main arguments, and any important conclusions. Focus on clarity and brevity.
   
   {{media url=pdfDataUri}}`,
 });
