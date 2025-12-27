@@ -30,14 +30,13 @@ const contextAwareResponsePrompt = ai.definePrompt({
   name: 'contextAwareResponsePrompt',
   input: {schema: ContextAwareResponseInputSchema},
   output: {schema: ContextAwareResponseOutputSchema},
-  system: `You are a helpful AI assistant. Consider the chat history and any attached files to provide relevant and coherent responses.`,
+  system: `You are a helpful AI assistant. Consider the chat history and any attached files to provide relevant and coherent responses. If a file is attached, analyze its content thoroughly, paying close attention to its original language.`,
   prompt: `{{#if chatHistory}}
 You have a chat history with the user.
 {{/if}}
 
 {{#if file}}
-The user has attached a file named '{{file.name}}'.
-Here is the file content:
+The user has attached a file named '{{file.name}}'. Please analyze its content carefully before responding.
 {{media url=file.data}}
 {{/if}}
 
