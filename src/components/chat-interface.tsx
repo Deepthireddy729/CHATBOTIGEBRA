@@ -200,16 +200,16 @@ export function ChatInterface() {
       <div className="border-t bg-background p-4">
         <div className="mx-auto w-full max-w-3xl">
           {uploadedFile && (
-            <div className="mb-2 flex items-center justify-between rounded-lg border p-2 bg-secondary">
-              <div className="flex items-center gap-2">
+            <div className="mb-2 flex items-center justify-between rounded-lg border p-2 bg-secondary/80">
+              <div className="flex items-center gap-2 min-w-0">
                 {uploadedFile.type.startsWith("image/") ? (
                   <Image src={uploadedFile.data} alt={uploadedFile.name} width={40} height={40} className="rounded object-cover"/>
                 ) : (
-                  <FileIcon className="h-6 w-6" />
+                  <FileIcon className="h-6 w-6 flex-shrink-0" />
                 )}
                 <span className="text-sm text-secondary-foreground truncate">{uploadedFile.name}</span>
               </div>
-              <Button variant="ghost" size="icon" onClick={removeFile} className="h-6 w-6">
+              <Button variant="ghost" size="icon" onClick={removeFile} className="h-6 w-6 flex-shrink-0">
                 <XCircle className="h-4 w-4" />
               </Button>
             </div>
@@ -246,7 +246,7 @@ export function ChatInterface() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Ask Luminous Echo..."
-              className="flex-1 resize-none overflow-y-auto rounded-xl border-input bg-secondary p-3 text-base min-h-[44px] max-h-48"
+              className="flex-1 resize-none rounded-xl border-input bg-secondary p-3 text-base min-h-[44px] max-h-48"
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();

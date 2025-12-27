@@ -81,4 +81,7 @@
   body {
     @apply bg-background text-foreground;
   }
+  textarea {
+    @apply [scrollbar-width:none];
+  }
 }
