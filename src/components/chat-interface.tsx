@@ -10,7 +10,13 @@ import { Bot, User, PlusCircle, Send, LoaderCircle, Paperclip, XCircle, File as 
 import { cn } from "@/lib/utils";
 import { getAIResponse } from "@/app/actions";
 import { StreamingText } from "./streaming-text";
+import dynamic from "next/dynamic";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
+
+const PDFPreview = dynamic(() => import("./pdf-preview").then(mod => ({ default: mod.PDFPreview })), {
+  ssr: false,
+  loading: () => <div className="flex items-center justify-center h-32 bg-gray-100 rounded-lg"><div className="text-gray-500">Loading PDF preview...</div></div>
+});
 
 interface Message {
   role: "user" | "ai";
@@ -175,6 +181,8 @@ export function ChatInterface() {
                    <div className="mb-2">
                    {message.file.type.startsWith("image/") ? (
                      <Image src={message.file.data} alt={message.file.name} width={200} height={150} className="rounded-lg object-cover"/>
+                   ) : message.file.type === "application/pdf" ? (
+                     <PDFPreview data={message.file.data} fileName={message.file.name} className="w-full max-w-sm" />
                    ) : (
                      <div className="flex items-center gap-2 p-2 rounded-lg bg-background/50">
                        <FileIcon className="h-6 w-6" />

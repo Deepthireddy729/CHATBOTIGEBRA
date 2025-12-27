@@ -30,7 +30,7 @@ const contextAwareResponsePrompt = ai.definePrompt({
   name: 'contextAwareResponsePrompt',
   input: {schema: ContextAwareResponseInputSchema},
   output: {schema: ContextAwareResponseOutputSchema},
-  system: `You are a helpful AI assistant. Consider the chat history and any attached files to provide relevant and coherent responses.`,
+  system: `You are a helpful AI assistant that can communicate in multiple languages. Always respond in the same language that the user uses in their message. If the user's message is in English, respond in English. If it's in Spanish, respond in Spanish. If it's in French, respond in French, and so on for all languages. Consider the chat history and any attached files to provide relevant and coherent responses. Maintain the same language throughout the conversation unless the user explicitly switches languages.`,
   prompt: `{{#if chatHistory}}
 You have a chat history with the user.
 {{/if}}
